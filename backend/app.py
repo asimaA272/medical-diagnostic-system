@@ -1,6 +1,22 @@
 ﻿from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-import uvicorn
+from PIL import Image
+import torch
+import io
+import sys
+import os
+
+sys.path.append(os.path.dirname(__file__))
+
+from src.model import load_trained_model
+from src.dataset import get_val_transforms
+from agents.detection_agent import detection_agent
+from agents.differential_agent import differential_agent
+from agents.evidence_agent import evidence_agent
+from agents.report_agent import report_agent
+from agents.fda_agent import fda_agent
+from agents.claude_agent import claude_agent
+from agents.vision_agent import vision_agent
 
 app = FastAPI()
 
@@ -11,30 +27,57 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+MODEL_PATH = os.path.join(os.path.dirname(__file__), "model", "final_model_v2.pth")
+model = load_trained_model(MODEL_PATH, device="cpu")
+transform = get_val_transforms()
+
 @app.get("/")
 def home():
     return {"status": "Backend is running!"}
 
 @app.post("/diagnose")
 async def diagnose(file: UploadFile = File(...)):
-    return {
-        "success": True,
-        "result": {
-            "primary_diagnosis": "Pneumonia",
-            "confidence": "87.3%",
-            "differential_diagnoses": [
-                {"disease": "Pneumonia", "confidence": 87},
-                {"disease": "Pleural Effusion", "confidence": 45},
-                {"disease": "Cardiomegaly", "confidence": 23},
-                {"disease": "No Finding", "confidence": 12}
-            ],
-            "supporting_literature": [
-                {"pmid": "32743479", "year": 2020, "title": "Deep learning for chest X-ray diagnosis"},
-                {"pmid": "31959783", "year": 2020, "title": "AI detection of pneumonia in chest radiographs"}
-            ],
-            "formatted_report": "CHEST X-RAY REPORT\n==================\nPrimary Finding: Pneumonia\nConfidence: 87.3%\nRecommendation: Immediate medical attention required."
-        }
-    }
+    try:
+        # Agent 1: Image load
+        contents = await file.read()
+        image = Image.open(io.BytesIO(contents)).convert("RGB")
+        tensor = transform(image).unsqueeze(0)
 
-if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=10000)
+        # Agent 2: Detection (ResNet50)
+        probs = detection_agent(tensor, model)
+
+        # Agent 3: Differential Diagnosis
+        ranked = differential_agent(probs)
+
+        # Agent 4: PubMed Evidence
+        primary_disease = ranked[0]["disease"]
+        evidence = evidence_agent(primary_disease)
+
+        # Agent 5: Report
+        report = report_agent(ranked, evidence)
+
+        # Agent 6: FDA Drugs
+        fda_data = fda_agent(primary_disease)
+
+        # Agent 7: Groq LLaMA Analysis
+        claude_data = claude_agent(primary_disease, ranked, evidence)
+
+        # Agent 8: GPT-4o Vision
+        vision_data = vision_agent(contents)
+
+        return {
+            "success": True,
+            "result": {
+                "primary_diagnosis": report["primary_diagnosis"],
+                "confidence": report["confidence"],
+                "differential_diagnoses": ranked,
+                "supporting_literature": evidence,
+                "formatted_report": report["formatted_report"],
+                "fda_drugs": fda_data,
+                "ai_analysis": claude_data,
+                "vision_analysis": vision_data
+            }
+        }
+
+    except Exception as e:
+        return {"success": False, "error": str(e)}

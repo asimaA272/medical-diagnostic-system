@@ -5,7 +5,7 @@ import io
 
 app = FastAPI()
 
-model = torch.load("model/final_model.pth", map_location="cpu")
+model = torch.load("model/final_model_v2pth", map_location="cpu")
 model.eval()
 
 @app.post("/predict")

@@ -2,8 +2,8 @@
     "version": 2,
     "routes": [
       {
-        "src": "/(.*)",
-        "dest": "/frontend/static/$1"
+        "src": "/",
+        "dest": "/index.html"
       }
     ]
   }

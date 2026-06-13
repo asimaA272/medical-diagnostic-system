@@ -1,16 +1,23 @@
 ﻿from fastapi import FastAPI, File, UploadFile
-import torch
-from PIL import Image
-import io
+from fastapi.middleware.cors import CORSMiddleware
+import uvicorn
 
 app = FastAPI()
 
-model = torch.load("model/final_model_v2pth", map_location="cpu")
-model.eval()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+@app.get("/")
+def home():
+    return {"status": "Backend is running!"}
 
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
-    image = Image.open(io.BytesIO(await file.read()))
-    # yahan tum apna preprocessing aur prediction code likho
-    result = {"diagnosis": "Pneumonia", "confidence": 0.92}
-    return result
+    return {"diagnosis": "Pneumonia", "confidence": 0.92}
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=10000)

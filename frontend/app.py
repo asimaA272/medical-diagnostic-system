@@ -4,7 +4,7 @@ import os
 
 app = Flask(__name__)
 
-BACKEND_URL = "https://medical-backend12.onrender.com/predict"
+https://medical-backend123-2kiw.onrender.com
 
 @app.route("/", methods=["GET", "POST"])
 def index():

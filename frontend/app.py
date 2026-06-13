@@ -2,7 +2,7 @@ from flask import Flask, render_template, request
 import requests
 
 app = Flask(__name__)
-BACKEND_URL = "https://medical-backend.onrender.com/predict"
+BACKEND_URL = "https://medical-backend12.onrender.com/predict"
 
 @app.route("/", methods=["GET", "POST"])
 def index():

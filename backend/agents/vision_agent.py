@@ -2,8 +2,8 @@ import openai
 import base64
 from PIL import Image
 import io
+OPENAI_API_KEY = "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"
 
-OPENAI_API_KEY = "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"
 
 def vision_agent(image_bytes: bytes):
     """GPT-4o Vision — Real API"""

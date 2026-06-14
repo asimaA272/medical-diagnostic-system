@@ -1,4 +1,4 @@
-﻿from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image
 import torch
@@ -74,3 +74,8 @@ async def diagnose(file: UploadFile = File(...)):
 
     except Exception as e:
         return {"success": False, "error": str(e)}
+
+if __name__ == '__main__':
+    import uvicorn
+    port = int(os.environ.get('PORT', 10000))
+    uvicorn.run(app, host='0.0.0.0', port=port)

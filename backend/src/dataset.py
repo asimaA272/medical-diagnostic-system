@@ -3,6 +3,10 @@ from pathlib import Path
 
 import torch
 from PIL import Image
+try:
+    from sklearn.model_selection import train_test_split
+except ImportError:
+    pass
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms

@@ -28,8 +28,14 @@ app.add_middleware(
 )
 
 MODEL_PATH = os.path.join(os.path.dirname(__file__), "model", "final_model_v2.pth")
-model = load_trained_model(MODEL_PATH, device="cpu")
 transform = get_val_transforms()
+model = None
+
+def get_model():
+    global model
+    if model is None:
+        model = load_trained_model(MODEL_PATH, device="cpu")
+    return model
 
 @app.get("/")
 def home():
@@ -38,31 +44,18 @@ def home():
 @app.post("/diagnose")
 async def diagnose(file: UploadFile = File(...)):
     try:
-        # Agent 1: Image load
         contents = await file.read()
         image = Image.open(io.BytesIO(contents)).convert("RGB")
         tensor = transform(image).unsqueeze(0)
 
-        # Agent 2: Detection (ResNet50)
-        probs = detection_agent(tensor, model)
-
-        # Agent 3: Differential Diagnosis
+        m = get_model()
+        probs = detection_agent(tensor, m)
         ranked = differential_agent(probs)
-
-        # Agent 4: PubMed Evidence
         primary_disease = ranked[0]["disease"]
         evidence = evidence_agent(primary_disease)
-
-        # Agent 5: Report
         report = report_agent(ranked, evidence)
-
-        # Agent 6: FDA Drugs
         fda_data = fda_agent(primary_disease)
-
-        # Agent 7: Groq LLaMA Analysis
         claude_data = claude_agent(primary_disease, ranked, evidence)
-
-        # Agent 8: GPT-4o Vision
         vision_data = vision_agent(contents)
 
         return {

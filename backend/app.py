@@ -17,7 +17,7 @@ from agents.report_agent import report_agent
 from agents.fda_agent import fda_agent
 from agents.claude_agent import claude_agent
 from agents.vision_agent import vision_agent
-
+from fastapi import Response
 app = FastAPI()
 
 app.add_middleware(
@@ -37,7 +37,7 @@ def get_model():
         model = load_trained_model(MODEL_PATH, device="cpu")
     return model
 
-@app.get("/")
+@app.api_route("/", methods=["GET", "HEAD"])
 def home():
     return {"status": "Backend is running!"}
 

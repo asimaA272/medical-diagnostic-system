@@ -18,8 +18,18 @@ from agents.fda_agent import fda_agent
 from agents.claude_agent import claude_agent
 from agents.vision_agent import vision_agent
 from fastapi import Response
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],

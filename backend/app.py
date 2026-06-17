@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, UploadFile, Response
 from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image
 import torch
@@ -17,19 +17,9 @@ from agents.report_agent import report_agent
 from agents.fda_agent import fda_agent
 from agents.claude_agent import claude_agent
 from agents.vision_agent import vision_agent
-from fastapi import Response
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -84,8 +74,3 @@ async def diagnose(file: UploadFile = File(...)):
 
     except Exception as e:
         return {"success": False, "error": str(e)}
-
-if __name__ == '__main__':
-    import uvicorn
-    port = int(os.environ.get('PORT', 10000))
-    uvicorn.run(app, host='0.0.0.0', port=port)
